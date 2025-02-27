@@ -14,7 +14,7 @@ class SudokuBoard {
 
   void _copySolutionToBoard() {
     Random random = Random();
-    int clues = 30;
+    int clues = 81;
     Set<int> positions = {};
 
     while (positions.length < clues) {

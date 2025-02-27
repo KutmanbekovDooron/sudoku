@@ -64,8 +64,8 @@ class _SudokuMainState extends State<SudokuMain> {
   }
 
   Color? colorIndex(block, index) {
-    var value = sudoku.board[block][index];
-    var activeValue = sudoku.board[activeIndex.block][activeIndex.index];
+    var value = sudoku.board[block][index].number;
+    var activeValue = sudoku.board[activeIndex.block][activeIndex.index].number;
 
     int startBlock = (activeIndex.block ~/ 3) * 3;
     int startIndex = (activeIndex.index ~/ 3) * 3;
