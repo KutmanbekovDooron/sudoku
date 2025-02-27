@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:sudoke/modals/level_model.dart';
 import 'package:sudoke/service/sudoku_generate.dart';
 import '../modals/active_model.dart';
 import '../service/sudoku_service.dart';
 
-class SudokuMain extends StatefulWidget {
-  const SudokuMain({super.key});
+class SudokuScreen extends StatefulWidget {
+  final levelEnum level;
+
+  const SudokuScreen({super.key, required this.level});
 
   @override
-  State<SudokuMain> createState() => _SudokuMainState();
+  State<SudokuScreen> createState() => _SudokuScreenState();
 }
 
-class _SudokuMainState extends State<SudokuMain> {
+class _SudokuScreenState extends State<SudokuScreen> {
   late SudokuBoard sudoku;
   ActiveIndex activeIndex = ActiveIndex(0, 0);
   bool isLoading = true;
@@ -26,11 +29,10 @@ class _SudokuMainState extends State<SudokuMain> {
     var generatedSudoku =
         await compute((_) => SudokuGenerate().generateBoard(), null);
     setState(() {
-      sudoku = SudokuBoard(generatedSudoku);
+      sudoku = SudokuBoard(generatedSudoku, widget.level);
       isLoading = false;
     });
   }
-
 
   void onNumberTap(int mainIndex, int index, int num) {
     setState(() {
@@ -131,8 +133,7 @@ class _SudokuMainState extends State<SudokuMain> {
                                   return GestureDetector(
                                     onTap: () {
                                       setState(() {
-                                        activeIndex =
-                                            ActiveIndex(block, index);
+                                        activeIndex = ActiveIndex(block, index);
                                       });
                                     },
                                     child: Container(
@@ -146,8 +147,7 @@ class _SudokuMainState extends State<SudokuMain> {
                                                           .number ==
                                                       0
                                                   ? ""
-                                                  : sudoku
-                                                      .board[block][index]
+                                                  : sudoku.board[block][index]
                                                       .number
                                                       .toString(),
                                               style: const TextStyle(

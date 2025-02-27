@@ -1,20 +1,22 @@
 import 'dart:math';
 
+import 'package:sudoke/modals/level_model.dart';
 import 'package:sudoke/modals/sudoku_model.dart';
 
 class SudokuBoard {
-  late List<List<Sudoku>> board ;
+  late List<List<Sudoku>> board;
+
   List<List<int>> solution;
+  final levelEnum level;
 
-
-  SudokuBoard(this.solution) {
+  SudokuBoard(this.solution, this.level) {
     board = List.generate(9, (_) => List.filled(9, Sudoku(0, false)));
-    _copySolutionToBoard();
+    _copySolutionToBoard(level);
   }
 
-  void _copySolutionToBoard() {
+  void _copySolutionToBoard(levelEnum level) {
     Random random = Random();
-    int clues = 81;
+    int clues = getLevelValue(level);
     Set<int> positions = {};
 
     while (positions.length < clues) {
@@ -40,4 +42,22 @@ class SudokuBoard {
     return board.every((block) => block.every((cell) => cell.number != 0));
   }
 
+  int getLevelValue(levelEnum level) {
+    switch (level) {
+      case levelEnum.fast:
+        return 62;
+      case levelEnum.easy:
+        return 50;
+      case levelEnum.normal:
+        return 39;
+      case levelEnum.hard:
+        return 38;
+      case levelEnum.expert:
+        return 28;
+      case levelEnum.extreme:
+        return 19;
+      default:
+        return 20;
+    }
+  }
 }
