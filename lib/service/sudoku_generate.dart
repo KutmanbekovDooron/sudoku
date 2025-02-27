@@ -47,9 +47,7 @@ class SudokuGenerate {
 
     for (int i = 0; i < 9; i++) {
       for (int j = 0; j < 9; j++) {
-        if (i != block &&
-            j != index &&
-            i % 3 == relativeBlock &&
+        if (i % 3 == relativeBlock &&
             j % 3 == relativeIndex &&
             grid[i][j] == num) {
           return false;
