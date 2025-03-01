@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:sudoke/modals/level_model.dart';
 import 'package:sudoke/service/sudoku_generate.dart';
 import '../modals/active_model.dart';
+import '../service/bottom_sheet_custom.dart';
 import '../service/sudoku_service.dart';
 
 class SudokuScreen extends StatefulWidget {
@@ -22,14 +23,14 @@ class _SudokuScreenState extends State<SudokuScreen> {
   @override
   void initState() {
     super.initState();
-    _generateSudoku();
+    _generateSudoku(widget.level);
   }
 
-  Future<void> _generateSudoku() async {
+  Future<void> _generateSudoku(levelEnum level) async {
     var generatedSudoku =
         await compute((_) => SudokuGenerate().generateBoard(), null);
     setState(() {
-      sudoku = SudokuBoard(generatedSudoku, widget.level);
+      sudoku = SudokuBoard(generatedSudoku, level);
       isLoading = false;
     });
   }
@@ -52,11 +53,13 @@ class _SudokuScreenState extends State<SudokuScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              setState(() {
-                isLoading = true;
+              BottomSheetCustom.show(context, (level) {
+                setState(() {
+                  isLoading = true;
+                });
+                _generateSudoku(level);
+                Navigator.pop(context);
               });
-              _generateSudoku();
-              Navigator.pop(context);
             },
             child: Text("Новая игра"),
           ),
@@ -82,12 +85,13 @@ class _SudokuScreenState extends State<SudokuScreen> {
         (block % 3 == relativeBlock) && (index % 3 == relativeIndex);
 
     if (block == activeIndex.block && index == activeIndex.index) {
-      return const Color(0xffACD6FA);
-    } else if ((activeValue == value && activeValue != 0) ||
-        block == activeIndex.block ||
+      return const Color(0xff8fc9fa);
+    } else if (activeValue == value && activeValue != 0) {
+      return const Color(0xffb1cff1);
+    } else if (block == activeIndex.block ||
         isSameRelativePosition ||
         isSameBox) {
-      return const Color(0xffDCE6F0);
+      return Colors.grey.shade200;
     }
     return null;
   }
