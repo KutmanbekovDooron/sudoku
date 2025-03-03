@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:sudoke/screens/main_screen.dart';
-import 'package:sudoke/screens/sudoku_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:sudoku/screens/main_screen.dart';
+import 'package:sudoku/states/sudoku_state.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+      create: (_) => SudokuState(), child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -22,6 +24,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-

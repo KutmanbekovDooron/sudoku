@@ -1,10 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:sudoke/modals/level_model.dart';
-import 'package:sudoke/service/sudoku_generate.dart';
+import 'package:provider/provider.dart';
+import 'package:sudoku/modals/level_model.dart';
+import 'package:sudoku/service/sudoku_generate.dart';
+import 'package:sudoku/states/sudoku_state.dart';
 import '../modals/active_model.dart';
 import '../service/bottom_sheet_custom.dart';
 import '../service/sudoku_service.dart';
+
+class SudokuProvider extends StatelessWidget {
+  final levelEnum level;
+
+  const SudokuProvider({super.key, required this.level});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider.value(
+      value: SudokuState(),
+      child: SudokuScreen(level: level),
+    );
+  }
+}
 
 class SudokuScreen extends StatefulWidget {
   final levelEnum level;
@@ -16,10 +32,6 @@ class SudokuScreen extends StatefulWidget {
 }
 
 class _SudokuScreenState extends State<SudokuScreen> {
-  late SudokuBoard sudoku;
-  ActiveIndex activeIndex = ActiveIndex(0, 0);
-  bool isLoading = true;
-
   @override
   void initState() {
     super.initState();
@@ -27,20 +39,8 @@ class _SudokuScreenState extends State<SudokuScreen> {
   }
 
   Future<void> _generateSudoku(levelEnum level) async {
-    var generatedSudoku =
-        await compute((_) => SudokuGenerate().generateBoard(), null);
-    setState(() {
-      sudoku = SudokuBoard(generatedSudoku, level);
-      isLoading = false;
-    });
-  }
-
-  void onNumberTap(int mainIndex, int index, int num) {
-    setState(() {
-      sudoku.placeNumber(mainIndex, index, num);
-      if (sudoku.isComplete()) {
-        _showWinDialog();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SudokuState>().generateSudoku(level);
     });
   }
 
@@ -48,52 +48,21 @@ class _SudokuScreenState extends State<SudokuScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Поздравляем!"),
-        content: Text("Вы решили Судоку!"),
+        title: const Text("Поздравляем!"),
+        content: const Text("Вы решили Судоку!"),
         actions: [
           TextButton(
             onPressed: () {
               BottomSheetCustom.show(context, (level) {
-                setState(() {
-                  isLoading = true;
-                });
                 _generateSudoku(level);
                 Navigator.pop(context);
               });
             },
-            child: Text("Новая игра"),
+            child: const Text("Новая игра"),
           ),
         ],
       ),
     );
-  }
-
-  Color? colorIndex(block, index) {
-    var value = sudoku.board[block][index].number;
-    var activeValue = sudoku.board[activeIndex.block][activeIndex.index].number;
-
-    int startBlock = (activeIndex.block ~/ 3) * 3;
-    int startIndex = (activeIndex.index ~/ 3) * 3;
-
-    bool isSameBox = (block >= startBlock && block < startBlock + 3) &&
-        (index >= startIndex && index < startIndex + 3);
-
-    int relativeBlock = activeIndex.block % 3;
-    int relativeIndex = activeIndex.index % 3;
-
-    bool isSameRelativePosition =
-        (block % 3 == relativeBlock) && (index % 3 == relativeIndex);
-
-    if (block == activeIndex.block && index == activeIndex.index) {
-      return const Color(0xff8fc9fa);
-    } else if (activeValue == value && activeValue != 0) {
-      return const Color(0xffb1cff1);
-    } else if (block == activeIndex.block ||
-        isSameRelativePosition ||
-        isSameBox) {
-      return Colors.grey.shade200;
-    }
-    return null;
   }
 
   @override
@@ -108,65 +77,71 @@ class _SudokuScreenState extends State<SudokuScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              isLoading
-                  ? const CircularProgressIndicator()
-                  : Flexible(
-                      child: Container(
-                        decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xff00374E))),
-                        child: GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                          ),
-                          shrinkWrap: true,
-                          itemCount: 9,
-                          itemBuilder: (context, block) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: const Color(0xff00374E)),
-                              ),
-                              child: GridView.builder(
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
+              Consumer<SudokuState>(builder: (context, state, child) {
+                // var sudoku = state.sudoku;
+                return state.isLoading
+                    ? const CircularProgressIndicator()
+                    : Flexible(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              border:
+                                  Border.all(color: const Color(0xff00374E))),
+                          child: GridView.builder(
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                            ),
+                            shrinkWrap: true,
+                            itemCount: 9,
+                            itemBuilder: (context, block) {
+                              return Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: const Color(0xff00374E)),
                                 ),
-                                itemCount: 9,
-                                itemBuilder: (context, index) {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        activeIndex = ActiveIndex(block, index);
-                                      });
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                          border: Border.all(
-                                              color: Colors.grey.shade400),
-                                          color: colorIndex(block, index)),
-                                      child: Center(
-                                          child: Text(
-                                              sudoku.board[block][index]
-                                                          .number ==
-                                                      0
-                                                  ? ""
-                                                  : sudoku.board[block][index]
-                                                      .number
-                                                      .toString(),
-                                              style: const TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 22,
-                                              ))),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
+                                child: GridView.builder(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                  ),
+                                  itemCount: 9,
+                                  itemBuilder: (context, index) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        state.changeActive(
+                                            ActiveIndex(block, index));
+                                      },
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                            border: Border.all(
+                                                color: Colors.grey.shade400),
+                                            color:
+                                                state.colorIndex(block, index)),
+                                        child: Center(
+                                            child: Text(
+                                                state.sudoku.board[block][index]
+                                                            .number ==
+                                                        0
+                                                    ? ""
+                                                    : state
+                                                        .sudoku
+                                                        .board[block][index]
+                                                        .number
+                                                        .toString(),
+                                                style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 22,
+                                                ))),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+              }),
               const SizedBox(
                 height: 30,
               ),
@@ -174,29 +149,48 @@ class _SudokuScreenState extends State<SudokuScreen> {
                 children: [
                   ...List.generate(
                     9,
-                    (index) => Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          onNumberTap(
-                              activeIndex.block, activeIndex.index, index + 1);
-                        },
-                        child: Container(
-                          height: 60,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Colors.white,
-                              boxShadow: const [
-                                BoxShadow(color: Colors.black12, blurRadius: 10)
-                              ]),
-                          child: Center(
-                              child: Text(
-                            "${index + 1}",
-                            style: const TextStyle(
-                                color: Colors.blueAccent, fontSize: 20),
-                          )),
-                        ),
-                      ),
+                    (index) => Consumer<SudokuState>(
+                      builder: (context, state, child) {
+                        int amount = state.filterNumbers(index + 1);
+                        return Expanded(
+                          child: Visibility(
+                            visible: amount != 0,
+                            child: GestureDetector(
+                              onTap: () {
+                                bool isComplete = context
+                                    .read<SudokuState>()
+                                    .onNumberTap(index + 1);
+                                if (isComplete) {
+                                  _showWinDialog();
+                                }
+                              },
+                              child: Container(
+                                height: 60,
+                                margin: const EdgeInsets.symmetric(horizontal: 4),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: Colors.white,
+                                    boxShadow: const [
+                                      BoxShadow(color: Colors.black12, blurRadius: 10)
+                                    ]),
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      child: Center(
+                                        child: Text(
+                                          "${index + 1}", style: const TextStyle(
+                                          color: Colors.blueAccent, fontSize: 22),
+                                        ),
+                                      ),
+                                    ),
+                                    Text('$amount' , style: const TextStyle(color: Colors.grey),)
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
                     ),
                   )
                 ],

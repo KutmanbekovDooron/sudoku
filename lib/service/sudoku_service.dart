@@ -1,7 +1,8 @@
 import 'dart:math';
-
-import 'package:sudoke/modals/level_model.dart';
-import 'package:sudoke/modals/sudoku_model.dart';
+import 'package:flutter/material.dart';
+import 'package:sudoku/modals/active_model.dart';
+import 'package:sudoku/modals/level_model.dart';
+import 'package:sudoku/modals/sudoku_model.dart';
 
 class SudokuBoard {
   late List<List<Sudoku>> board;
@@ -60,4 +61,34 @@ class SudokuBoard {
         return 20;
     }
   }
+
+  Color? colorIndex(block, index, ActiveIndex activeIndex) {
+    var value = board[block][index].number;
+    var activeValue = board[activeIndex.block][activeIndex.index].number;
+
+    int startBlock = (activeIndex.block ~/ 3) * 3;
+    int startIndex = (activeIndex.index ~/ 3) * 3;
+
+    bool isSameBox = (block >= startBlock && block < startBlock + 3) &&
+        (index >= startIndex && index < startIndex + 3);
+
+    int relativeBlock = activeIndex.block % 3;
+    int relativeIndex = activeIndex.index % 3;
+
+    bool isSameRelativePosition =
+        (block % 3 == relativeBlock) && (index % 3 == relativeIndex);
+
+    if (block == activeIndex.block && index == activeIndex.index) {
+      return const Color(0xff8fc9fa);
+    } else if (activeValue == value && activeValue != 0) {
+      return const Color(0xffb1cff1);
+    } else if (block == activeIndex.block ||
+        isSameRelativePosition ||
+        isSameBox) {
+      return Colors.grey.shade200;
+    }
+    return null;
+  }
+
+
 }

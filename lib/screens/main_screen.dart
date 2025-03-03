@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:sudoke/components/level_bottom_sheet.dart';
-import 'package:sudoke/modals/level_model.dart';
-import 'package:sudoke/screens/sudoku_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:sudoku/screens/sudoku_screen.dart';
 
 import '../service/bottom_sheet_custom.dart';
+import '../states/sudoku_state.dart';
 
 class MainScreen extends StatelessWidget {
-  MainScreen({super.key});
+  const MainScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

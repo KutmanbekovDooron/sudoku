@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:sudoke/modals/level_model.dart';
+import 'package:sudoku/modals/level_model.dart';
 
 import '../components/level_bottom_sheet.dart';
 
